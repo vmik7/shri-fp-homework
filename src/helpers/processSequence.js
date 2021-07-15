@@ -43,7 +43,6 @@ import {
     toString,
     __,
     test,
-    andThen,
     pipe,
     tap,
     modulo,
@@ -54,6 +53,7 @@ import {
     ifElse,
     always,
 } from 'ramda';
+
 import Api from '../tools/api';
 
 const api = new Api();
