@@ -13,21 +13,41 @@
  * Если какие либо функции написаны руками (без использования библиотек) это не является ошибкой
  */
 
-import { equals, curry, prop, compose, allPass } from 'ramda';
+import {
+    equals,
+    curry,
+    prop,
+    compose,
+    allPass,
+    reduce,
+    lte,
+    inc,
+    values,
+    tap,
+    props,
+} from 'ramda';
 import { SHAPES, COLORS } from '../constants';
 
-const checkColor = curry((color, value) => equals(color, value));
+const checkColor = (color) => equals(color);
 const isWhite = checkColor(COLORS.WHITE);
 const isBlue = checkColor(COLORS.BLUE);
 const isGreen = checkColor(COLORS.GREEN);
 const isRed = checkColor(COLORS.RED);
 const isOrange = checkColor(COLORS.ORANGE);
 
-const getShape = curry((shapeName, obj) => prop(shapeName, obj));
+const getShape = (shapeName) => prop(shapeName);
 const getStar = getShape(SHAPES.STAR);
 const getSquare = getShape(SHAPES.SQUARE);
 const getTriangle = getShape(SHAPES.TRIANGLE);
 const getCircle = getShape(SHAPES.CIRCLE);
+
+const pickShapes = props(values(SHAPES));
+
+const countShapesByColor = (color) =>
+    compose(
+        reduce((acc, value) => (checkColor(color)(value) ? inc(acc) : acc), 0),
+        pickShapes,
+    );
 
 // 1. Красная звезда, зеленый квадрат, все остальные белые.
 export const validateFieldN1 = allPass([
@@ -38,7 +58,10 @@ export const validateFieldN1 = allPass([
 ]);
 
 // 2. Как минимум две фигуры зеленые.
-export const validateFieldN2 = () => false;
+export const validateFieldN2 = compose(
+    lte(2),
+    countShapesByColor(COLORS.GREEN),
+);
 
 // 3. Количество красных фигур равно кол-ву синих.
 export const validateFieldN3 = () => false;
