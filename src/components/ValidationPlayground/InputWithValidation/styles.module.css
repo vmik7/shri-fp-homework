@@ -37,7 +37,7 @@
     shape-rendering: crispEdges;
     transition: fill 300ms;
     stroke: #212121;
-    strokeWidth: 2;
+    strokewidth: 2;
 }
 
 .shapeColorWite {

@@ -3,7 +3,7 @@ export const SHAPES = {
     SQUARE: 'square',
     CIRCLE: 'circle',
     STAR: 'star',
-}
+};
 
 export const COLORS = {
     RED: 'red',
@@ -11,4 +11,4 @@ export const COLORS = {
     ORANGE: 'orange',
     GREEN: 'green',
     WHITE: 'white',
-}
+};
