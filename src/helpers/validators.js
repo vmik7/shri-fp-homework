@@ -14,40 +14,37 @@
  */
 
 import {
-    equals,
     curry,
     prop,
     compose,
+    partialRight,
     allPass,
-    reduce,
     lte,
-    inc,
+    filter,
+    gte,
     values,
     tap,
     props,
+    length,
+    equals,
 } from 'ramda';
 import { SHAPES, COLORS } from '../constants';
 
-const checkColor = (color) => equals(color);
-const isWhite = checkColor(COLORS.WHITE);
-const isBlue = checkColor(COLORS.BLUE);
-const isGreen = checkColor(COLORS.GREEN);
-const isRed = checkColor(COLORS.RED);
-const isOrange = checkColor(COLORS.ORANGE);
+const isWhite = equals(COLORS.WHITE);
+const isBlue = equals(COLORS.BLUE);
+const isGreen = equals(COLORS.GREEN);
+const isRed = equals(COLORS.RED);
+const isOrange = equals(COLORS.ORANGE);
 
-const getShape = (shapeName) => prop(shapeName);
-const getStar = getShape(SHAPES.STAR);
-const getSquare = getShape(SHAPES.SQUARE);
-const getTriangle = getShape(SHAPES.TRIANGLE);
-const getCircle = getShape(SHAPES.CIRCLE);
+const getStar = prop(SHAPES.STAR);
+const getSquare = prop(SHAPES.SQUARE);
+const getTriangle = prop(SHAPES.TRIANGLE);
+const getCircle = prop(SHAPES.CIRCLE);
 
-const pickShapes = props(values(SHAPES));
+const getShapeColors = props(values(SHAPES));
 
-const countShapesByColor = (color) =>
-    compose(
-        reduce((acc, value) => (checkColor(color)(value) ? inc(acc) : acc), 0),
-        pickShapes,
-    );
+const countShapesByColorFn = (colorFn) =>
+    compose(length, filter(colorFn), getShapeColors);
 
 // 1. Красная звезда, зеленый квадрат, все остальные белые.
 export const validateFieldN1 = allPass([
@@ -59,8 +56,8 @@ export const validateFieldN1 = allPass([
 
 // 2. Как минимум две фигуры зеленые.
 export const validateFieldN2 = compose(
-    lte(2),
-    countShapesByColor(COLORS.GREEN),
+    partialRight(gte, [2]),
+    countShapesByColorFn(isGreen),
 );
 
 // 3. Количество красных фигур равно кол-ву синих.
