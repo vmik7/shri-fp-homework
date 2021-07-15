@@ -21,6 +21,7 @@ import {
     allPass,
     lte,
     filter,
+    reject,
     gte,
     values,
     tap,
@@ -28,6 +29,8 @@ import {
     length,
     equals,
     converge,
+    map,
+    find,
 } from 'ramda';
 import { SHAPES, COLORS } from '../constants';
 
@@ -36,6 +39,8 @@ const isBlue = equals(COLORS.BLUE);
 const isGreen = equals(COLORS.GREEN);
 const isRed = equals(COLORS.RED);
 const isOrange = equals(COLORS.ORANGE);
+
+const colorsExcludeWhite = reject(isWhite, values(COLORS));
 
 const getStar = prop(SHAPES.STAR);
 const getSquare = prop(SHAPES.SQUARE);
@@ -56,10 +61,7 @@ export const validateFieldN1 = allPass([
 ]);
 
 // 2. Как минимум две фигуры зеленые.
-export const validateFieldN2 = compose(
-    partialRight(gte, [2]),
-    countShapesByColor(isGreen),
-);
+export const validateFieldN2 = compose(lte(2), countShapesByColor(isGreen));
 
 // 3. Количество красных фигур равно кол-ву синих.
 export const validateFieldN3 = converge(equals, [
@@ -68,10 +70,21 @@ export const validateFieldN3 = converge(equals, [
 ]);
 
 // 4. Синий круг, красная звезда, оранжевый квадрат треугольник любого цвета
-export const validateFieldN4 = () => false;
+export const validateFieldN4 = allPass([
+    compose(isBlue, getCircle),
+    compose(isRed, getStar),
+    compose(isOrange, getSquare),
+]);
 
 // 5. Три фигуры одного любого цвета кроме белого (четыре фигуры одного цвета – это тоже true).
-export const validateFieldN5 = () => false;
+export const validateFieldN5 = (obj) =>
+    find(
+        lte(3),
+        map(
+            (color) => countShapesByColor(equals(color))(obj),
+            colorsExcludeWhite,
+        ),
+    );
 
 // 6. Ровно две зеленые фигуры (одна из зелёных – это треугольник), плюс одна красная. Четвёртая оставшаяся любого доступного цвета, но не нарушающая первые два условия
 export const validateFieldN6 = () => false;
