@@ -16,7 +16,8 @@
 import {
     compose,
     converge,
-    lte,
+    __,
+    gte,
     max,
     allPass,
     equals,
@@ -66,7 +67,7 @@ export const validateFieldN1 = allPass([
 ]);
 
 // 2. Как минимум две фигуры зеленые.
-export const validateFieldN2 = compose(lte(2), countShapesByColor(isGreen));
+export const validateFieldN2 = compose(gte(__, 2), countShapesByColor(isGreen));
 
 // 3. Количество красных фигур равно кол-ву синих.
 export const validateFieldN3 = converge(equals, [
@@ -83,7 +84,7 @@ export const validateFieldN4 = allPass([
 
 // 5. Три фигуры одного любого цвета кроме белого (четыре фигуры одного цвета – это тоже true).
 export const validateFieldN5 = compose(
-    lte(3),
+    gte(__, 3),
     maxValue,
     countBy(toString),
     reject(isWhite),
