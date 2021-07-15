@@ -14,43 +14,48 @@
  */
 
 import {
-    curry,
-    prop,
     compose,
-    partialRight,
-    allPass,
-    lte,
-    filter,
-    reject,
-    gte,
-    values,
-    tap,
-    props,
-    length,
-    equals,
     converge,
-    map,
-    find,
+    lte,
+    max,
+    allPass,
+    equals,
+    not,
+    values,
+    props,
+    prop,
+    filter,
+    reduce,
+    reject,
+    length,
+    all,
+    countBy,
+    toString,
 } from 'ramda';
 import { SHAPES, COLORS } from '../constants';
 
+// Проверка цветов
 const isWhite = equals(COLORS.WHITE);
 const isBlue = equals(COLORS.BLUE);
 const isGreen = equals(COLORS.GREEN);
 const isRed = equals(COLORS.RED);
 const isOrange = equals(COLORS.ORANGE);
 
-const colorsExcludeWhite = reject(isWhite, values(COLORS));
-
+// Получить цвета конкретной фигуры
 const getStar = prop(SHAPES.STAR);
 const getSquare = prop(SHAPES.SQUARE);
 const getTriangle = prop(SHAPES.TRIANGLE);
 const getCircle = prop(SHAPES.CIRCLE);
 
+// Получить цвета всех фигур
 const getShapeColors = props(values(SHAPES));
 
+// Подсчёт количества фигур заданого цвета
 const countShapesByColor = (colorFn) =>
     compose(length, filter(colorFn), getShapeColors);
+
+// Максимальное значение в массиве тлт объекте
+const maxValue = compose(reduce(max, 0), values);
 
 // 1. Красная звезда, зеленый квадрат, все остальные белые.
 export const validateFieldN1 = allPass([
@@ -77,26 +82,35 @@ export const validateFieldN4 = allPass([
 ]);
 
 // 5. Три фигуры одного любого цвета кроме белого (четыре фигуры одного цвета – это тоже true).
-export const validateFieldN5 = (obj) =>
-    find(
-        lte(3),
-        map(
-            (color) => countShapesByColor(equals(color))(obj),
-            colorsExcludeWhite,
-        ),
-    );
+export const validateFieldN5 = compose(
+    lte(3),
+    maxValue,
+    countBy(toString),
+    reject(isWhite),
+    getShapeColors,
+);
 
 // 6. Ровно две зеленые фигуры (одна из зелёных – это треугольник), плюс одна красная. Четвёртая оставшаяся любого доступного цвета, но не нарушающая первые два условия
-export const validateFieldN6 = () => false;
+export const validateFieldN6 = allPass([
+    compose(equals(2), countShapesByColor(isGreen)),
+    compose(equals(1), countShapesByColor(isRed)),
+    compose(isGreen, getTriangle),
+]);
 
 // 7. Все фигуры оранжевые.
-export const validateFieldN7 = () => false;
+export const validateFieldN7 = compose(all(isOrange), getShapeColors);
 
 // 8. Не красная и не белая звезда, остальные – любого цвета.
-export const validateFieldN8 = () => false;
+export const validateFieldN8 = allPass([
+    compose(not, isRed, getStar),
+    compose(not, isWhite, getStar),
+]);
 
 // 9. Все фигуры зеленые.
-export const validateFieldN9 = () => false;
+export const validateFieldN9 = compose(all(isGreen), getShapeColors);
 
 // 10. Треугольник и квадрат одного цвета (не белого), остальные – любого цвета
-export const validateFieldN10 = () => false;
+export const validateFieldN10 = allPass([
+    converge(equals, [getTriangle, getSquare]),
+    compose(not, isWhite, getSquare),
+]);
