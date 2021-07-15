@@ -27,6 +27,7 @@ import {
     props,
     length,
     equals,
+    converge,
 } from 'ramda';
 import { SHAPES, COLORS } from '../constants';
 
@@ -43,7 +44,7 @@ const getCircle = prop(SHAPES.CIRCLE);
 
 const getShapeColors = props(values(SHAPES));
 
-const countShapesByColorFn = (colorFn) =>
+const countShapesByColor = (colorFn) =>
     compose(length, filter(colorFn), getShapeColors);
 
 // 1. Красная звезда, зеленый квадрат, все остальные белые.
@@ -57,11 +58,14 @@ export const validateFieldN1 = allPass([
 // 2. Как минимум две фигуры зеленые.
 export const validateFieldN2 = compose(
     partialRight(gte, [2]),
-    countShapesByColorFn(isGreen),
+    countShapesByColor(isGreen),
 );
 
 // 3. Количество красных фигур равно кол-ву синих.
-export const validateFieldN3 = () => false;
+export const validateFieldN3 = converge(equals, [
+    countShapesByColor(isRed),
+    countShapesByColor(isBlue),
+]);
 
 // 4. Синий круг, красная звезда, оранжевый квадрат треугольник любого цвета
 export const validateFieldN4 = () => false;
