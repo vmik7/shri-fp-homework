@@ -31,7 +31,7 @@ import {
     length,
     all,
     countBy,
-    toString,
+    always,
 } from 'ramda';
 import { SHAPES, COLORS } from '../constants';
 
@@ -86,7 +86,7 @@ export const validateFieldN4 = allPass([
 export const validateFieldN5 = compose(
     gte(__, 3),
     maxValue,
-    countBy(toString),
+    countBy(always),
     reject(isWhite),
     getShapeColors,
 );
