@@ -33,49 +33,35 @@
  * Завершить цепочку вызовом handleSuccess в который в качестве аргумента положить результат полученный на предыдущем шаге
  */
 
-import { allPass, compose, gte, length, lte, toString, __, test } from 'ramda';
+import {
+    allPass,
+    compose,
+    gte,
+    length,
+    multiply,
+    lte,
+    toString,
+    __,
+    test,
+    andThen,
+    pipe,
+    tap,
+    modulo,
+    curry,
+    prop,
+    assoc,
+    replace,
+    ifElse,
+    always,
+} from 'ramda';
 import Api from '../tools/api';
 
 const api = new Api();
 
-/**
- * Я – пример, удали меня
- */
-// const wait = (time) =>
-//     new Promise((resolve) => {
-//         setTimeout(resolve, time);
-//     });
+// Возведение в квадрат
+const square = (value) => multiply(value, value);
 
-// const processSequence = ({ value, writeLog, handleSuccess, handleError }) => {
-//     /**
-//      * Я – пример, удали меня
-//      */
-//     writeLog(value);
-
-//     api.get('https://api.tech/numbers/base', {
-//         from: 2,
-//         to: 10,
-//         number: '01011010101',
-//     }).then(({ result }) => {
-//         writeLog(result);
-//     });
-
-//     wait(2500)
-//         .then(() => {
-//             writeLog('SecondLog');
-
-//             return wait(1500);
-//         })
-//         .then(() => {
-//             writeLog('ThirdLog');
-
-//             return wait(400);
-//         })
-//         .then(() => {
-//             handleSuccess('Done');
-//         });
-// };
-
+// Валидация
 const validate = allPass([
     compose(lte(__, 10), length, toString),
     compose(gte(__, 2), length, toString),
@@ -83,41 +69,49 @@ const validate = allPass([
     test(/[0-9.]*/),
 ]);
 
-const processSequence = ({ value, writeLog, handleSuccess, handleError }) => {
-    writeLog(value);
+// Функция для построения цепочки промисов
+const then = curry((fn, promise) => promise.then(fn));
 
-    if (!validate(value)) {
-        handleError('ValidationError');
-    }
+// API запрос на перевод в двоичную систему счисления
+const toBinary = pipe(
+    assoc('number', __, { from: 10, to: 2 }),
+    api.get('https://api.tech/numbers/base'),
+    then(prop('result')),
+);
 
-    const number = Math.round(+value);
-    writeLog(number);
+// API запрос животного по ID
+const getAnimal = pipe(
+    replace('{id}', __, `https://animals.tech/{id}`),
+    api.get(__, {}),
+    then(prop('result')),
+);
 
-    api.get('https://api.tech/numbers/base', {
-        from: 10,
-        to: 2,
-        number,
-    })
-        .then(({ result }) => {
-            writeLog(result);
-            return length(result);
-        })
-        .then((result) => {
-            writeLog(result);
-            return result * result;
-        })
-        .then((result) => {
-            writeLog(result);
-            return result % 3;
-        })
-        .then((id) => {
-            writeLog(id);
-            return api.get(`https://animals.tech/${id}`, {});
-        })
-        .then(({ result }) => {
-            handleSuccess(result);
-        })
-        .catch(console.error);
-};
+// Обработка валидных данных
+const process = ({ writeLog, handleSuccess }) =>
+    pipe(
+        Number,
+        Math.round,
+        tap(writeLog),
+        toBinary,
+        then(tap(writeLog)),
+        then(length),
+        then(tap(writeLog)),
+        then(square),
+        then(tap(writeLog)),
+        then(modulo(__, 3)),
+        then(tap(writeLog)),
+        then(getAnimal),
+        then(handleSuccess),
+    );
+
+const processSequence = ({ value, writeLog, handleSuccess, handleError }) =>
+    pipe(
+        tap(writeLog),
+        ifElse(
+            validate,
+            process({ writeLog, handleSuccess }),
+            compose(handleError, always('ValidationError')),
+        ),
+    )(value);
 
 export default processSequence;
